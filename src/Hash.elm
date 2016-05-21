@@ -15,7 +15,7 @@ import Char
 Given the same seed and string, it will always produce the same hash.
 Not suitable for cryptographic applications (i.e. password hashing).
 
-string 1234 "Turn me into a hash" == <some integer>
+string 1234 "Turn me into a hash" == 4138100590
 -}
 string : Int -> String -> Int
 string seed str =
