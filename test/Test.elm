@@ -1,12 +1,12 @@
 module Test.Hash exposing (main)
 
 import ElmTest exposing (..)
-import Hash
+import Murmur3
 
 
 hashFn : String -> Int
 hashFn =
-    Hash.string 63476
+    Murmur3.hashString 63476
 
 
 tests : Test
