@@ -20,8 +20,7 @@ Given the same seed and string, it will always produce the same hash.
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> String.toList
-        |> List.map Char.toCode
+        |> String.foldr (\c acc -> Char.toCode c :: acc) []
         |> hashChars seed
         |> finalize (String.length str)
 
