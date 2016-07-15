@@ -30,45 +30,44 @@ hashChars seed codes =
         seed
     else
         let
-            ( firstFour, rest ) =
-                splitAt 4 codes
+            rest =
+                List.drop 4 codes
 
             hash =
-                hashFourChars firstFour 0
+                hashFourChars codes 0
                     |> mix seed
         in
             -- Only step if we hashed a full set of characters
-            if List.length firstFour == 4 then
+            if greaterThanFour 0 codes then
                 hashChars (step hash) rest
             else
                 hashChars hash rest
 
 
-splitAt : Int -> List a -> ( List a, List a )
-splitAt n list =
-    if n <= 0 then
-        ( [], list )
-    else
-        case list of
-            [] ->
-                ( list, list )
-
-            x :: xs ->
-                let
-                    ( ys, zs ) =
-                        splitAt (n - 1) xs
-                in
-                    ( x :: ys, zs )
-
-
 hashFourChars : List Int -> Int -> Int
 hashFourChars codes shift =
-    case codes of
-        x :: xs ->
-            ((x `and` 0xFF) `shiftLeft` shift) `or` hashFourChars xs (shift + 8)
+    if shift >= 32 then
+        0
+    else
+        case codes of
+            x :: xs ->
+                ((x `and` 0xFF) `shiftLeft` shift) `or` hashFourChars xs (shift + 8)
 
-        _ ->
-            0
+            _ ->
+                0
+
+
+greaterThanFour : Int -> List Int -> Bool
+greaterThanFour num codes =
+    if num >= 4 then
+        True
+    else
+        case codes of
+            x :: xs ->
+                greaterThanFour (num + 1) xs
+
+            [] ->
+                False
 
 
 mix : Int -> Int -> Int
