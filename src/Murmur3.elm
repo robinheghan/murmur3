@@ -9,7 +9,6 @@ module Murmur3 exposing (hashString)
 import Bitwise exposing (..)
 import String
 import Char
-import List.Extra as Extra
 
 
 {-| Takes a seed and a string. Produces a hash (integer).
@@ -32,7 +31,7 @@ hashChars seed codes =
     else
         let
             ( firstFour, rest ) =
-                Extra.splitAt 4 codes
+                splitAt 4 codes
 
             hash =
                 hashFourChars firstFour 0
@@ -43,6 +42,23 @@ hashChars seed codes =
                 hashChars (step hash) rest
             else
                 hashChars hash rest
+
+
+splitAt : Int -> List a -> ( List a, List a )
+splitAt n list =
+    if n <= 0 then
+        ( [], list )
+    else
+        case list of
+            [] ->
+                ( list, list )
+
+            x :: xs ->
+                let
+                    ( ys, zs ) =
+                        splitAt (n - 1) xs
+                in
+                    ( x :: ys, zs )
 
 
 hashFourChars : List Int -> Int -> Int
