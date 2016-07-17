@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.2
+
+* Hash function should now be 25% faster.
+
 ## 2.0.1
 
 * Hash function should now be 2,5x faster.
