@@ -19,55 +19,52 @@ Given the same seed and string, it will always produce the same hash.
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> String.foldr (\c acc -> Char.toCode c :: acc) []
-        |> hashChars seed
+        |> String.foldl hashFold ( 0, seed, 0 )
         |> finalize (String.length str)
 
 
-hashChars : Int -> List Int -> Int
-hashChars seed codes =
-    if List.isEmpty codes then
-        seed
-    else
-        let
-            rest =
-                List.drop 4 codes
+hashFold : Char -> ( Int, Int, Int ) -> ( Int, Int, Int )
+hashFold c ( shift, seed, hash ) =
+    let
+        res =
+            (((Char.toCode c) `and` 0xFF) `shiftLeft` shift) `or` hash
+    in
+        if shift >= 24 then
+            let
+                newHash =
+                    res |> mix seed |> step
+            in
+                ( 0, newHash, 0 )
+        else
+            ( shift + 8, seed, res )
 
-            hash =
-                hashFourChars codes 0
-                    |> mix seed
-        in
-            -- Only step if we hashed a full set of characters
-            if greaterThanFour 0 codes then
-                hashChars (step hash) rest
+
+finalize : Int -> ( Int, Int, Int ) -> Int
+finalize strLength ( _, seed, hash ) =
+    let
+        acc =
+            if hash /= 0 then
+                mix seed hash
             else
-                hashChars hash rest
+                seed
 
+        h1 =
+            acc `Bitwise.xor` strLength
 
-hashFourChars : List Int -> Int -> Int
-hashFourChars codes shift =
-    if shift >= 32 then
-        0
-    else
-        case codes of
-            x :: xs ->
-                ((x `and` 0xFF) `shiftLeft` shift) `or` hashFourChars xs (shift + 8)
+        h2 =
+            h1
+                `Bitwise.xor` (h1 `shiftRightLogical` 16)
+                |> mur 0x85EBCA6B
 
-            _ ->
-                0
+        h3 =
+            h2
+                `Bitwise.xor` (h2 `shiftRightLogical` 13)
+                |> mur 0xC2B2AE35
 
-
-greaterThanFour : Int -> List Int -> Bool
-greaterThanFour num codes =
-    if num >= 4 then
-        True
-    else
-        case codes of
-            x :: xs ->
-                greaterThanFour (num + 1) xs
-
-            [] ->
-                False
+        h4 =
+            h3 `Bitwise.xor` (h3 `shiftRightLogical` 16)
+    in
+        h4 `shiftRightLogical` 0
 
 
 mix : Int -> Int -> Int
@@ -98,25 +95,3 @@ step acc =
                 |> mur 5
     in
         ((h1 `and` 0xFFFF) + 0x6B64) + ((((h1 `shiftRightLogical` 16) + 0xE654) `and` 0xFFFF) `shiftLeft` 16)
-
-
-finalize : Int -> Int -> Int
-finalize strLength acc =
-    let
-        h1 =
-            acc `Bitwise.xor` strLength
-
-        h2 =
-            h1
-                `Bitwise.xor` (h1 `shiftRightLogical` 16)
-                |> mur 0x85EBCA6B
-
-        h3 =
-            h2
-                `Bitwise.xor` (h2 `shiftRightLogical` 13)
-                |> mur 0xC2B2AE35
-
-        h4 =
-            h3 `Bitwise.xor` (h3 `shiftRightLogical` 16)
-    in
-        h4 `shiftRightLogical` 0
