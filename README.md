@@ -7,3 +7,7 @@ It is not, however, suitable for cryptographic use (like hashing a password).
 To use, simply import the main namespace:
 
     import Murmur3
+
+Then
+
+    Murmur3.hashString "string to hash"

@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.3
+
+* Compile with Elm 0.18
+
 ## 2.0.2
 
 * Hash function should now be 25% faster.
