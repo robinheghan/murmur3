@@ -1,8 +1,12 @@
 # Changes
 
+## 2.0.4
+
+* Correct usage example in readme.
+
 ## 2.0.3
 
-* Compile with Elm 0.18
+* Compile with Elm 0.18.
 
 ## 2.0.2
 
