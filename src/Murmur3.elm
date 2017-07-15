@@ -14,46 +14,74 @@ import Char
 Given the same seed and string, it will always produce the same hash.
 
     hashString 1234 "Turn me into a hash" == 4138100590
+
 -}
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> String.foldl hashFold ( 0, seed, 0 )
-        |> finalize (String.length str)
+        |> String.foldr prepareString []
+        |> listHash (String.length str) seed
 
 
-hashFold : Char -> ( Int, Int, Int ) -> ( Int, Int, Int )
-hashFold c ( shift, seed, hash ) =
-    let
-        res =
-            Char.toCode c
-                |> and 0xFF
-                |> shiftLeftBy shift
-                |> or hash
-    in
-        if shift >= 24 then
+prepareString : Char -> List Int -> List Int
+prepareString char acc =
+    (Char.toCode char |> and 0xFF) :: acc
+
+
+listHash : Int -> Int -> List Int -> Int
+listHash strLength hash chars =
+    case chars of
+        [] ->
+            finalize strLength hash
+
+        a :: r1 ->
             let
-                newHash =
-                    res
-                        |> mix seed
-                        |> step
+                c1 =
+                    a
             in
-                ( 0, newHash, 0 )
-        else
-            ( shift + 8, seed, res )
+                case r1 of
+                    [] ->
+                        finalize strLength (mix hash c1)
+
+                    b :: r2 ->
+                        let
+                            c2 =
+                                b
+                                    |> shiftLeftBy 8
+                                    |> or c1
+                        in
+                            case r2 of
+                                [] ->
+                                    finalize strLength (mix hash c2)
+
+                                c :: r3 ->
+                                    let
+                                        c3 =
+                                            c
+                                                |> shiftLeftBy 16
+                                                |> or c2
+                                    in
+                                        case r3 of
+                                            [] ->
+                                                finalize strLength (mix hash c3)
+
+                                            d :: r4 ->
+                                                let
+                                                    c4 =
+                                                        d
+                                                            |> shiftLeftBy 24
+                                                            |> or c3
+                                                            |> mix hash
+                                                            |> step
+                                                in
+                                                    listHash strLength c4 r4
 
 
-finalize : Int -> ( Int, Int, Int ) -> Int
-finalize strLength ( _, seed, hash ) =
+finalize : Int -> Int -> Int
+finalize strLength hash =
     let
-        acc =
-            if hash /= 0 then
-                mix seed hash
-            else
-                seed
-
         h1 =
-            Bitwise.xor acc strLength
+            Bitwise.xor hash strLength
 
         h2 =
             h1

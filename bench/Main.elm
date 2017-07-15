@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Benchmark.Runner exposing (BenchmarkProgram, program)
-import Benchmark exposing (Benchmark, describe, benchmark1, benchmark2, benchmark3)
+import Benchmark exposing (Benchmark, describe, benchmark2)
 import Murmur3
 
 
@@ -24,6 +24,6 @@ main : BenchmarkProgram
 main =
     program <|
         describe "Murmur3"
-            [ benchmark2 "Short string" Murmur3.hashString seed shortStr
-            , benchmark2 "Longer string" Murmur3.hashString seed longerStr
+            [ benchmark2 "short string" Murmur3.hashString seed shortStr
+            , benchmark2 "longer string" Murmur3.hashString seed longerStr
             ]
