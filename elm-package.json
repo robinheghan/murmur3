@@ -1,5 +1,5 @@
 {
-    "version": "2.0.4",
+    "version": "2.0.5",
     "summary": "An implementation of the murmur 3 hash function in elm",
     "repository": "https://github.com/Skinney/murmur3.git",
     "license": "MIT",
