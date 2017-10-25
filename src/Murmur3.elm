@@ -7,7 +7,7 @@ module Murmur3 exposing (hashString)
 -}
 
 import Bitwise exposing (..)
-import Char
+import UTF8
 
 
 {-| Takes a seed and a string. Produces a hash (integer).
@@ -19,62 +19,28 @@ Given the same seed and string, it will always produce the same hash.
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> String.foldr prepareString []
-        |> listHash (String.length str) seed
+        |> UTF8.foldl hashFold ( 0, seed, 0 )
+        |> finalize (UTF8.length str)
 
 
-prepareString : Char -> List Int -> List Int
-prepareString char acc =
-    (Char.toCode char |> and 0xFF) :: acc
-
-
-listHash : Int -> Int -> List Int -> Int
-listHash strLength hash chars =
-    case chars of
-        [] ->
-            finalize strLength hash
-
-        a :: r1 ->
-            let
-                c1 =
-                    a
-            in
-                case r1 of
-                    [] ->
-                        finalize strLength (mix hash c1)
-
-                    b :: r2 ->
-                        let
-                            c2 =
-                                b
-                                    |> shiftLeftBy 8
-                                    |> or c1
-                        in
-                            case r2 of
-                                [] ->
-                                    finalize strLength (mix hash c2)
-
-                                c :: r3 ->
-                                    let
-                                        c3 =
-                                            c
-                                                |> shiftLeftBy 16
-                                                |> or c2
-                                    in
-                                        case r3 of
-                                            [] ->
-                                                finalize strLength (mix hash c3)
-
-                                            d :: r4 ->
-                                                let
-                                                    c4 =
-                                                        d
-                                                            |> shiftLeftBy 24
-                                                            |> or c3
-                                                            |> mix hash
-                                                            |> step
-                                                in
-                                                    listHash strLength c4 r4
+hashFold : Int -> ( Int, Int, Int ) -> ( Int, Int, Int )
+hashFold c ( shift, seed, hash ) =
+    let
+        res =
+            c
+                |> shiftLeftBy shift
+                |> or hash
+    in
+    if shift >= 24 then
+        let
+            newHash =
+                res
+                    |> mix seed
+                    |> step
+        in
+        ( 0, newHash, 0 )
+    else
+        ( shift + 8, seed, res )
 
 
 finalize : Int -> Int -> Int
@@ -95,10 +61,10 @@ finalize strLength hash =
                 |> Bitwise.xor h2
                 |> mur 0xC2B2AE35
     in
-        h3
-            |> shiftRightZfBy 16
-            |> Bitwise.xor h3
-            |> shiftRightZfBy 0
+    h3
+        |> shiftRightZfBy 16
+        |> Bitwise.xor h3
+        |> shiftRightZfBy 0
 
 
 mix : Int -> Int -> Int
@@ -107,16 +73,16 @@ mix h1 h2 =
         k1 =
             mur 0xCC9E2D51 h2
     in
-        k1
-            |> shiftLeftBy 15
-            |> or (shiftRightZfBy 17 k1)
-            |> mur 0x1B873593
-            |> Bitwise.xor h1
+    k1
+        |> shiftLeftBy 15
+        |> or (shiftRightZfBy 17 k1)
+        |> mur 0x1B873593
+        |> Bitwise.xor h1
 
 
 mur : Int -> Int -> Int
 mur c h =
-    and 0xFFFFFFFF (((and h 0xFFFF) * c) + (shiftLeftBy 16 (and 0xFFFF ((shiftRightZfBy 16 h) * c))))
+    and 0xFFFFFFFF ((and h 0xFFFF * c) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h * c)))
 
 
 step : Int -> Int
@@ -127,4 +93,4 @@ step acc =
                 |> or (shiftRightZfBy 19 acc)
                 |> mur 5
     in
-        ((and h1 0xFFFF) + 0x6B64) + (shiftLeftBy 16 (and 0xFFFF ((shiftRightZfBy 16 h1) + 0xE654)))
+    (and h1 0xFFFF + 0x6B64) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h1 + 0xE654))
