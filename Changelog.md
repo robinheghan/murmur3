@@ -1,5 +1,9 @@
 # Changes
 
+## 2.0.6
+
+* 3x Performance improvement.
+
 ## 2.0.5
 
 * Correctly handle UTF-16 strings. This does come with a noticable performance hit, but correctness is more important. Hopefully, this can be fixed in future versions.
