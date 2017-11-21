@@ -1,4 +1,4 @@
-module UTF8 exposing (foldl, length)
+module UTF8 exposing (foldl)
 
 import Bitwise exposing (and, or, shiftLeftBy, shiftRightZfBy)
 import Char
@@ -6,13 +6,12 @@ import Char
 
 foldl : (Int -> a -> a) -> a -> String -> a
 foldl op acc input =
-    String.foldl (Char.toCode >> accumulate op) ( acc, Nothing ) input
-        |> Tuple.first
-
-
-length : String -> Int
-length input =
-    foldl (always <| (+) 1) 0 input
+    let
+        helper char acc =
+            accumulate op (Char.toCode char) acc
+    in
+        String.foldl helper ( acc, Nothing ) input
+            |> Tuple.first
 
 
 type alias Accumulator a =
@@ -47,16 +46,17 @@ accumulate add char ( acc, combine ) =
             let
                 combined : Int
                 combined =
-                    prev
+                    (prev
                         |> and 0x03FF
                         |> shiftLeftBy 10
                         |> or (and 0x03FF char)
-                        |> (+) 0x00010000
+                    )
+                        + 0x00010000
             in
-            ( acc
-                |> add (or 0xF0 <| shiftRightZfBy 18 combined)
-                |> add (or 0x80 <| and 0x3F <| shiftRightZfBy 12 combined)
-                |> add (or 0x80 <| and 0x3F <| shiftRightZfBy 6 combined)
-                |> add (or 0x80 <| and 0x3F combined)
-            , Nothing
-            )
+                ( acc
+                    |> add (or 0xF0 <| shiftRightZfBy 18 combined)
+                    |> add (or 0x80 <| and 0x3F <| shiftRightZfBy 12 combined)
+                    |> add (or 0x80 <| and 0x3F <| shiftRightZfBy 6 combined)
+                    |> add (or 0x80 <| and 0x3F combined)
+                , Nothing
+                )

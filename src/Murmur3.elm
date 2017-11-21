@@ -10,6 +10,14 @@ import Bitwise exposing (..)
 import UTF8
 
 
+type alias HashData =
+    { shift : Int
+    , seed : Int
+    , hash : Int
+    , charsProcessed : Int
+    }
+
+
 {-| Takes a seed and a string. Produces a hash (integer).
 Given the same seed and string, it will always produce the same hash.
 
@@ -19,41 +27,52 @@ Given the same seed and string, it will always produce the same hash.
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> UTF8.foldl hashFold ( 0, seed, 0 )
-        |> finalize (UTF8.length str)
+        |> UTF8.foldl hashFold (HashData 0 seed 0 0)
+        |> finalize
 
 
-hashFold : Int -> ( Int, Int, Int ) -> ( Int, Int, Int )
-hashFold c ( shift, seed, hash ) =
+hashFold : Int -> HashData -> HashData
+hashFold c data =
     let
         res =
             c
-                |> shiftLeftBy shift
-                |> or hash
+                |> shiftLeftBy data.shift
+                |> or data.hash
     in
-        if shift >= 24 then
-            let
-                newHash =
-                    res
-                        |> mix seed
-                        |> step
-            in
-                ( 0, newHash, 0 )
-        else
-            ( shift + 8, seed, res )
+        -- Using case-of instead of == avoids costly .cmp check
+        case data.shift of
+            24 ->
+                let
+                    newHash =
+                        res
+                            |> mix data.seed
+                            |> step
+                in
+                    { shift = 0
+                    , seed = newHash
+                    , hash = 0
+                    , charsProcessed = data.charsProcessed + 1
+                    }
+
+            _ ->
+                { shift = data.shift + 8
+                , seed = data.seed
+                , hash = res
+                , charsProcessed = data.charsProcessed + 1
+                }
 
 
-finalize : Int -> ( Int, Int, Int ) -> Int
-finalize strLength ( _, seed, hash ) =
+finalize : HashData -> Int
+finalize data =
     let
         acc =
-            if hash /= 0 then
-                mix seed hash
+            if data.hash /= 0 then
+                mix data.seed data.hash
             else
-                seed
+                data.seed
 
         h1 =
-            Bitwise.xor acc strLength
+            Bitwise.xor acc data.charsProcessed
 
         h2 =
             h1
