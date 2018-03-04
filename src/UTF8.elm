@@ -7,8 +7,8 @@ import Char
 foldl : (Int -> a -> a) -> a -> String -> a
 foldl op acc input =
     let
-        helper char acc =
-            accumulate op (Char.toCode char) acc
+        helper char res =
+            accumulate op (Char.toCode char) res
     in
         String.foldl helper ( acc, Nothing ) input
             |> Tuple.first

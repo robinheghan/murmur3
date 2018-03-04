@@ -1,0 +1,15 @@
+{
+    "type": "package",
+    "name": "Skinney/murmur3",
+    "summary": "An implementation of the Murmur3 hash function for Elm",
+    "license": "MIT",
+    "version": "2.0.7",
+    "exposed-modules": [
+        "Murmur3"
+    ],
+    "elm-version": "0.19.0 <= v < 0.20.0",
+    "dependencies": {
+        "elm-lang/core": "6.0.0 <= v < 7.0.0"
+    },
+    "test-dependencies": {}
+}
