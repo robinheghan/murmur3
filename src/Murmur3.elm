@@ -7,7 +7,6 @@ module Murmur3 exposing (hashString)
 -}
 
 import Bitwise exposing (..)
-import UTF8
 
 
 type alias HashData =
