@@ -39,27 +39,27 @@ hashFold c data =
                 |> shiftLeftBy data.shift
                 |> or data.hash
     in
-        -- Using case-of instead of == avoids costly .cmp check
-        case data.shift of
-            24 ->
-                let
-                    newHash =
-                        res
-                            |> mix data.seed
-                            |> step
-                in
-                    { shift = 0
-                    , seed = newHash
-                    , hash = 0
-                    , charsProcessed = data.charsProcessed + 1
-                    }
+    -- Using case-of instead of == avoids costly .cmp check
+    case data.shift of
+        24 ->
+            let
+                newHash =
+                    res
+                        |> mix data.seed
+                        |> step
+            in
+            { shift = 0
+            , seed = newHash
+            , hash = 0
+            , charsProcessed = data.charsProcessed + 1
+            }
 
-            _ ->
-                { shift = data.shift + 8
-                , seed = data.seed
-                , hash = res
-                , charsProcessed = data.charsProcessed + 1
-                }
+        _ ->
+            { shift = data.shift + 8
+            , seed = data.seed
+            , hash = res
+            , charsProcessed = data.charsProcessed + 1
+            }
 
 
 finalize : HashData -> Int
@@ -68,6 +68,7 @@ finalize data =
         acc =
             if data.hash /= 0 then
                 mix data.seed data.hash
+
             else
                 data.seed
 
@@ -86,10 +87,10 @@ finalize data =
                 |> Bitwise.xor h2
                 |> mur 0xC2B2AE35
     in
-        h3
-            |> shiftRightZfBy 16
-            |> Bitwise.xor h3
-            |> shiftRightZfBy 0
+    h3
+        |> shiftRightZfBy 16
+        |> Bitwise.xor h3
+        |> shiftRightZfBy 0
 
 
 mix : Int -> Int -> Int
@@ -98,11 +99,11 @@ mix h1 h2 =
         k1 =
             mur 0xCC9E2D51 h2
     in
-        k1
-            |> shiftLeftBy 15
-            |> or (shiftRightZfBy 17 k1)
-            |> mur 0x1B873593
-            |> Bitwise.xor h1
+    k1
+        |> shiftLeftBy 15
+        |> or (shiftRightZfBy 17 k1)
+        |> mur 0x1B873593
+        |> Bitwise.xor h1
 
 
 mur : Int -> Int -> Int
@@ -118,4 +119,4 @@ step acc =
                 |> or (shiftRightZfBy 19 acc)
                 |> mur 5
     in
-        (and h1 0xFFFF + 0x6B64) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h1 + 0xE654))
+    (and h1 0xFFFF + 0x6B64) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h1 + 0xE654))
