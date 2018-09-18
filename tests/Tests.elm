@@ -8,8 +8,8 @@ import Test exposing (Test, describe, test)
 hashes : Test
 hashes =
     [ ( "Turn me into a hash", 4138100590 )
-    , ( "✓ à la mode", 146308576 )
-    , ( "💩💩💩", 4037155920 )
+    , ( "✓ à la mode", 1373299617 )
+    , ( "💩💩💩", 652402685 )
     , ( String.fromInt -102433675, 3067109540 )
     , ( String.fromFloat 4.32, 3411453253 )
     ]
