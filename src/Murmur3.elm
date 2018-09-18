@@ -6,7 +6,7 @@ module Murmur3 exposing (hashString)
 
 -}
 
-import Bitwise exposing (..)
+import Bitwise as Bit
 
 
 type alias HashData =
@@ -15,6 +15,16 @@ type alias HashData =
     , hash : Int
     , charsProcessed : Int
     }
+
+
+c1 : Int
+c1 =
+    0xCC9E2D51
+
+
+c2 : Int
+c2 =
+    0x1B873593
 
 
 {-| Takes a seed and a string. Produces a hash (integer).
@@ -34,22 +44,16 @@ hashFold : Char -> HashData -> HashData
 hashFold c data =
     let
         res =
-            c
-                |> Char.toCode
-                |> shiftLeftBy data.shift
-                |> or data.hash
+            Char.toCode c
+                |> Bit.and 0xFF
+                |> Bit.shiftLeftBy data.shift
+                |> Bit.or data.hash
     in
     -- Using case-of instead of == avoids costly .cmp check
     case data.shift of
         24 ->
-            let
-                newHash =
-                    res
-                        |> mix data.seed
-                        |> step
-            in
             { shift = 0
-            , seed = newHash
+            , seed = mix data.seed res
             , hash = 0
             , charsProcessed = data.charsProcessed + 1
             }
@@ -62,61 +66,60 @@ hashFold c data =
             }
 
 
+mix : Int -> Int -> Int
+mix h1 k1 =
+    (k1
+        |> multiplyBy c1
+        |> rotlBy 15
+        |> multiplyBy c2
+        |> Bit.xor h1
+        |> rotlBy 13
+        |> multiplyBy 5
+    )
+        + 0xE6546B64
+
+
 finalize : HashData -> Int
 finalize data =
     let
         acc =
             if data.hash /= 0 then
-                mix data.seed data.hash
+                data.hash
+                    |> multiplyBy c1
+                    |> rotlBy 15
+                    |> multiplyBy c2
+                    |> Bit.xor data.seed
 
             else
                 data.seed
 
+        h0 =
+            Bit.xor acc data.charsProcessed
+
         h1 =
-            Bitwise.xor acc data.charsProcessed
+            Bit.xor h0 (Bit.shiftRightZfBy 16 h0)
+                |> multiplyBy 0x85EBCA6B
 
         h2 =
-            h1
-                |> shiftRightZfBy 16
-                |> Bitwise.xor h1
-                |> mur 0x85EBCA6B
-
-        h3 =
-            h2
-                |> shiftRightZfBy 13
-                |> Bitwise.xor h2
-                |> mur 0xC2B2AE35
+            Bit.xor h1 (Bit.shiftRightZfBy 13 h1)
+                |> multiplyBy 0xC2B2AE35
     in
-    h3
-        |> shiftRightZfBy 16
-        |> Bitwise.xor h3
-        |> shiftRightZfBy 0
+    Bit.xor h2 (Bit.shiftRightZfBy 16 h2)
+        |> Bit.shiftRightZfBy 0
 
 
-mix : Int -> Int -> Int
-mix h1 h2 =
-    let
-        k1 =
-            mur 0xCC9E2D51 h2
-    in
-    k1
-        |> shiftLeftBy 15
-        |> or (shiftRightZfBy 17 k1)
-        |> mur 0x1B873593
-        |> Bitwise.xor h1
+{-| 32-bit multiplication
+-}
+multiplyBy : Int -> Int -> Int
+multiplyBy b a =
+    (Bit.and a 0xFFFF * b) + Bit.shiftLeftBy 16 (Bit.and (Bit.shiftRightZfBy 16 a * b) 0xFFFF)
 
 
-mur : Int -> Int -> Int
-mur c h =
-    and 0xFFFFFFFF ((and h 0xFFFF * c) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h * c)))
-
-
-step : Int -> Int
-step acc =
-    let
-        h1 =
-            shiftLeftBy 13 acc
-                |> or (shiftRightZfBy 19 acc)
-                |> mur 5
-    in
-    (and h1 0xFFFF + 0x6B64) + shiftLeftBy 16 (and 0xFFFF (shiftRightZfBy 16 h1 + 0xE654))
+{-| Given a 32bit int and an int representing a number of bit positions,
+returns the 32bit int rotated left by that number of positions.
+-}
+rotlBy : Int -> Int -> Int
+rotlBy b a =
+    Bit.or
+        (Bit.shiftLeftBy b a)
+        (Bit.shiftRightZfBy (32 - b) a)
