@@ -1,5 +1,13 @@
 # Changes
 
+## 2.0.8
+
+* Improved performance by roughly 50% in optmized mode.
+
+## 2.0.7
+
+* Elm 0.19 support.
+
 ## 2.0.6
 
 * 3x Performance improvement.
