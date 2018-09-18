@@ -27,15 +27,16 @@ Given the same seed and string, it will always produce the same hash.
 hashString : Int -> String -> Int
 hashString seed str =
     str
-        |> UTF8.foldl hashFold (HashData 0 seed 0 0)
+        |> String.foldl hashFold (HashData 0 seed 0 0)
         |> finalize
 
 
-hashFold : Int -> HashData -> HashData
+hashFold : Char -> HashData -> HashData
 hashFold c data =
     let
         res =
             c
+                |> Char.toCode
                 |> shiftLeftBy data.shift
                 |> or data.hash
     in
