@@ -2,4 +2,4 @@
 
 set -e
 
-elm make Main.elm --output index.html
+elm make Main.elm --output index.html --optimize
