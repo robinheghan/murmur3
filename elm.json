@@ -1,9 +1,9 @@
 {
     "type": "package",
-    "name": "Skinney/murmur3",
+    "name": "robinheghan/murmur3",
     "summary": "An implementation of the Murmur3 hash function for Elm",
     "license": "MIT",
-    "version": "2.0.8",
+    "version": "1.0.0",
     "exposed-modules": [
         "Murmur3"
     ],
